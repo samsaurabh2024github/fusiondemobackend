@@ -21,10 +21,12 @@ const coachSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
-    school: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "School",
-    },
+   school: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "School",
+  default: null
+}
+,
     role: {
       type: String,
       enum: ["admin", "coach"],
