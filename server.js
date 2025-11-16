@@ -8,7 +8,7 @@ import classRoutes from "./routes/classRoutes.js";
 import coachRoutes from "./routes/coachRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 
-import teacherRoutes from "./routes/teacherRoutes.js";
+// import teacherRoutes from "./routes/teacherRoutes.js";
 // import leaveRoutes from "./routes/leaveRoutes.js";
 import schoolRoutes from "./routes/schoolRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
@@ -37,7 +37,7 @@ app.use("/api/schools", schoolRoutes);
 
 app.use("/api/assign", assignRoutes);
 
-app.use("/api/teacher", teacherRoutes);
+// app.use("/api/teacher", teacherRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 

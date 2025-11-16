@@ -1,40 +1,11 @@
 import Attendance from "../models/Attendance.js";
+import Coach from "../models/Coach.js";
 import mongoose from "mongoose";
-import Teacher from "../models/Teacher.js";
-
-// ➤ Add attendance (COACH ONLY)
-// export const addAttendance = async (req, res) => {
-//   try {
-//     const teacherId = req.user.id; // FROM TOKEN
-//     const { classId, date, totalPresent } = req.body;
-
-//     if (!classId || !date || !totalPresent) {
-//       return res.status(400).json({
-//         message: "classId, date and totalPresent are required",
-//       });
-//     }
-
-//     const data = await Attendance.create({
-//       classId,
-//       teacherId,
-//       date,
-//       totalPresent,
-//     });
-
-//     return res.status(201).json({
-//       message: "Attendance saved",
-//       data,
-//     });
-//   } catch (error) {
-//     console.log("Attendance Add Error:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 // ➤ Add attendance (COACH ONLY)
 export const addAttendance = async (req, res) => {
   try {
-    const teacherId = req.user.id; // FROM TOKEN
+    const coachId = req.user.id; // from JWT
     const { classId, date, totalPresent } = req.body;
 
     if (!classId || !date || !totalPresent) {
@@ -43,14 +14,14 @@ export const addAttendance = async (req, res) => {
       });
     }
 
-    // ⭐ CHECK: Is teacher assigned to this class?
-    const teacher = await Teacher.findById(teacherId);
+    // ⭐ CHECK: Is coach assigned to this class?
+    const coach = await Coach.findById(coachId);
 
-    if (!teacher) {
-      return res.status(404).json({ message: "Teacher not found" });
+    if (!coach) {
+      return res.status(404).json({ message: "Coach not found" });
     }
 
-    const isAssigned = teacher.assignedClasses.includes(classId);
+    const isAssigned = coach.assignedClasses?.includes(classId);
 
     if (!isAssigned) {
       return res.status(403).json({
@@ -61,7 +32,7 @@ export const addAttendance = async (req, res) => {
     // ➤ Save attendance
     const data = await Attendance.create({
       classId,
-      teacherId,
+      teacherId: coachId, // keep teacherId field for compatibility
       date,
       totalPresent,
     });
@@ -76,8 +47,7 @@ export const addAttendance = async (req, res) => {
   }
 };
 
-
-// ➤ Get attendance by ID (ADMIN + COACH)
+// ➤ Get attendance by ID
 export const getAttendanceById = async (req, res) => {
   try {
     const attendance = await Attendance.findById(req.params.id);
@@ -92,7 +62,7 @@ export const getAttendanceById = async (req, res) => {
   }
 };
 
-// ➤ Get ALL attendance (optional filters)
+// ➤ Get ALL attendance
 export const getAllAttendances = async (req, res) => {
   try {
     const { classId, teacherId, date } = req.query;
@@ -146,9 +116,7 @@ export const deleteAttendance = async (req, res) => {
     const deleted = await Attendance.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res
-        .status(404)
-        .json({ message: "Attendance record not found" });
+      return res.status(404).json({ message: "Attendance record not found" });
     }
 
     return res.status(200).json({ message: "Attendance deleted" });
