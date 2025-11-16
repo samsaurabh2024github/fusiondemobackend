@@ -9,25 +9,24 @@
 
 // export default router;
 
-
 import express from "express";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+
 import {
-  assignClassToTeacher,
+  assignClassToCoach,
   getAssignedClasses,
   removeAssignedClass
 } from "../controllers/assignController.js";
 
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
-
 const router = express.Router();
 
-// Assign class to teacher
-router.post("/assign-class", protect, authorizeRoles("admin"), assignClassToTeacher);
+// Assign class to coach (Admin)
+router.post("/coach-class", protect, authorizeRoles("admin"), assignClassToCoach);
 
-// Get classes assigned to a teacher
-router.get("/", protect, authorizeRoles("admin"), getAssignedClasses);
+// Get assigned classes (Coach)
+router.get("/", protect, getAssignedClasses);
 
-// Remove class assignment
+// Remove assigned class (Admin)
 router.delete("/:id", protect, authorizeRoles("admin"), removeAssignedClass);
 
 export default router;

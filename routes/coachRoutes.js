@@ -15,13 +15,19 @@
 
 import express from "express";
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
-import { assignCoachToSchool } from "../controllers/coachController.js";
+import { addCoach, assignCoachToSchool } from "../controllers/coachController.js";
+import Coach from "../models/Coach.js";
 
 const router = express.Router();
 
 // Only logged-in users (any role)
 router.get("/profile", protect, (req, res) => {
   res.json({ message: "Welcome Coach!", user: req.user });
+});
+
+router.get("/all", async (req, res) => {
+  const coaches = await Coach.find().populate("school", "name");
+  res.json(coaches);
 });
 
 
@@ -31,6 +37,9 @@ router.get("/admin-only", protect, authorizeRoles("admin"), (req, res) => {
 });
 
 router.post("/assign", protect, authorizeRoles("admin"), assignCoachToSchool);
+
+
+router.post("/add", protect, authorizeRoles("admin"), addCoach);
 
 export default router;
 
