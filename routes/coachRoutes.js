@@ -41,5 +41,22 @@ router.post("/assign", protect, authorizeRoles("admin"), assignCoachToSchool);
 
 router.post("/add", protect, authorizeRoles("admin"), addCoach);
 
+router.get("/me", protect, async (req, res) => {
+  try {
+    const coach = await Coach.findById(req.user._id)
+      .populate("school")
+      .populate("assignedClasses");
+
+    if (!coach) {
+      return res.status(404).json({ message: "Coach not found" });
+    }
+
+    res.json(coach);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 export default router;
 
