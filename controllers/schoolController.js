@@ -1,4 +1,4 @@
-import School from "../models/school.js";
+import School from "../models/School.js";
 
 export const createSchool = async (req, res) => {
   try {
