@@ -15,6 +15,9 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 
 import assignRoutes from "./routes/assignRoutes.js";
 
+import contactRoutes from "./routes/contactRoutes.js";
+
+
 dotenv.config();
 connectDB();
 
@@ -24,6 +27,8 @@ app.use(cors());
 
 // Base route
 app.get("/", (req, res) => res.send("FusionMain API Running 🚀"));
+
+
 
 // // API routes
 app.use("/api/auth", authRoutes);
@@ -39,6 +44,10 @@ app.use("/api/assign", assignRoutes);
 
 // app.use("/api/teacher", teacherRoutes);
 app.use("/api/attendance", attendanceRoutes);
+
+
+app.use("/api/contact", contactRoutes);
+
 
 
 

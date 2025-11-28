@@ -170,6 +170,8 @@ export const login = async (req, res) => {
     // Step 2 — If not found → Try Coach model
     if (!user) {
       user = await Coach.findOne({ email });
+      console.log("coach found");
+      
     }
 
     if (!user)
