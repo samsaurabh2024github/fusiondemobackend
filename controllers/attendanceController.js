@@ -137,6 +137,75 @@ import Coach from "../models/Coach.js"; // adjust import path if needed
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // ➤ Add attendance (Coach only)
+// export const addAttendance = async (req, res) => {
+//   try {
+//     const coachId = req.user.id; // from protect middleware
+//     const {
+//       date,
+//       schoolId,
+//       classId,
+//       period,
+//       program,
+//       className,
+//       section,
+//       attendance,   
+//       strength,     
+//       absent,      
+//       activity,
+//       reason
+//     } = req.body;
+
+    
+//     if (!date || !schoolId || !classId || !period || !program || !className) {
+//       return res.status(400).json({ message: "Required fields missing" });
+//     }
+
+//     if (attendance == null && strength == null) {
+//       return res.status(400).json({ message: "attendance or strength is required" });
+//     }
+
+//     if (!isValidId(schoolId) || !isValidId(classId)) {
+//       return res.status(400).json({ message: "Invalid schoolId or classId" });
+//     }
+
+   
+//     let finalAbsent = absent;
+//     if (finalAbsent == null) {
+//       if (strength != null && attendance != null) {
+//         finalAbsent = Number(strength) - Number(attendance);
+//         if (finalAbsent < 0) finalAbsent = 0;
+//       } else {
+//         finalAbsent = 0;
+//       }
+//     }
+
+//     const record = await Attendance.create({
+//       coachId,
+//       schoolId,
+//       classId,
+//       date,
+//       period,
+//       program,
+//       className,
+//       section,
+//       attendance: attendance != null ? Number(attendance) : 0,
+//       activity: activity || "",
+//       strength: strength != null ? Number(strength) : Number(attendance || 0),
+//       absent: Number(finalAbsent),
+//       reason: reason || ""
+//     });
+
+//     return res.status(201).json({ message: "Attendance saved", data: record });
+//   } catch (error) {
+//     console.error("Add Attendance Error:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+
+// controllers/attendanceController.js
+
 export const addAttendance = async (req, res) => {
   try {
     const coachId = req.user.id; // from protect middleware
@@ -148,35 +217,66 @@ export const addAttendance = async (req, res) => {
       program,
       className,
       section,
-      attendance,   // present count (number)
-      strength,     // total students (number)
-      absent,       // optional; if not provided we calculate
-      activity,
-      reason
+      attendance,   // present count
+      strength,     // total students
+      absent,       // optional
+      activity,     // may be empty from frontend
+      reason,       // for not conducted
     } = req.body;
 
-    // Basic validation
-    if (!date || !schoolId || !classId || !period || !program || !className) {
+    // 1) Basic required fields
+    if (!date || !schoolId || !classId || !period || !program || !className || !section) {
       return res.status(400).json({ message: "Required fields missing" });
-    }
-
-    if (attendance == null && strength == null) {
-      return res.status(400).json({ message: "attendance or strength is required" });
     }
 
     if (!isValidId(schoolId) || !isValidId(classId)) {
       return res.status(400).json({ message: "Invalid schoolId or classId" });
     }
 
-    // If absent not provided, calculate for safety
+    const strengthNum = strength != null ? Number(strength) : 0;
+    const attendanceNum = attendance != null ? Number(attendance) : 0;
+
+    // 2) Detect if class is conducted or not
+    const classNotConducted = strengthNum === 0 && attendanceNum === 0;
+
+    // 3) Validation for "not conducted" case
+    if (classNotConducted) {
+      if (!reason || reason.trim().length < 3) {
+        return res.status(400).json({
+          message: "Reason is required when class is not conducted",
+        });
+      }
+    } else {
+      // 4) Validation for normal conducted class
+      if (strength == null) {
+        return res.status(400).json({ message: "Class strength is required" });
+      }
+      if (attendance == null) {
+        return res.status(400).json({ message: "Present count is required" });
+      }
+      if (attendanceNum > strengthNum) {
+        return res.status(400).json({
+          message: "Present cannot be more than class strength",
+        });
+      }
+    }
+
+    // 5) Decide final activity text
+    let activityToSave = (activity || "").trim();
+    if (!classNotConducted && !activityToSave) {
+      // class conducted but no activity
+      return res
+        .status(400)
+        .json({ message: "Activity is required when class is conducted" });
+    }
+    if (classNotConducted && !activityToSave) {
+      activityToSave = "Class not conducted";
+    }
+
+    // 6) Calculate absent if not provided
     let finalAbsent = absent;
     if (finalAbsent == null) {
-      if (strength != null && attendance != null) {
-        finalAbsent = Number(strength) - Number(attendance);
-        if (finalAbsent < 0) finalAbsent = 0;
-      } else {
-        finalAbsent = 0;
-      }
+      finalAbsent = Math.max(0, strengthNum - attendanceNum);
     }
 
     const record = await Attendance.create({
@@ -188,11 +288,11 @@ export const addAttendance = async (req, res) => {
       program,
       className,
       section,
-      attendance: attendance != null ? Number(attendance) : 0,
-      activity: activity || "",
-      strength: strength != null ? Number(strength) : Number(attendance || 0),
+      attendance: attendanceNum,
+      strength: strengthNum,
       absent: Number(finalAbsent),
-      reason: reason || ""
+      activity: activityToSave,
+      reason: reason || "",
     });
 
     return res.status(201).json({ message: "Attendance saved", data: record });
@@ -201,6 +301,9 @@ export const addAttendance = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
 
 // ➤ Get attendance by id (Admin + Coach)
 export const getAttendanceById = async (req, res) => {

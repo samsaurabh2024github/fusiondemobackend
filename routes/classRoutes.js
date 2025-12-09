@@ -20,7 +20,7 @@ const router = express.Router();
 router.post("/add", protect, authorizeRoles("admin"), addClass);
 
 // Get classes by schoolId (admin only)
-router.get("/", protect, authorizeRoles("admin"), getClassesBySchool);
+router.get("/", protect, authorizeRoles("admin", "coach"), getClassesBySchool);
 
 // Delete class
 router.delete("/:id", protect, authorizeRoles("admin"), deleteClass);

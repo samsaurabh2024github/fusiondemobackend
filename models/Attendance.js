@@ -98,7 +98,7 @@ const attendanceSchema = new mongoose.Schema(
     // Activity performed
     activity: {
       type: String,
-      required: true,
+      required: false,
     },
 
     // Total students
